@@ -3,6 +3,15 @@ from adb_shell.auth.keygen import keygen
 from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from pathlib import Path
 from os import environ
+from sys import argv
+
+MUSIC_DIRECTORY_PATH = "/storage/6263-3431/Videoloader"
+
+
+def play(device: AdbDeviceUsb, album: str, song: str):
+    response = device.shell(
+        f"am start -a android.intent.action.VIEW -d \"file://{MUSIC_DIRECTORY_PATH}/{album}/{song}.mp3\" -t audio/mp3", decode=True)
+    print(response)
 
 
 def main() -> None:
@@ -14,10 +23,10 @@ def main() -> None:
 
     signer = PythonRSASigner(public_key.read_bytes(), private_key.read_bytes())
 
-    device = AdbDeviceUsb()
+    device: AdbDeviceUsb = AdbDeviceUsb()
     device.connect(rsa_keys=[signer])
 
-    device.shell("input keyevent 26")
+    play(device, argv[1], argv[2])
 
 
 if __name__ == "__main__":
