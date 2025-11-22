@@ -2,20 +2,25 @@ from adb_shell.adb_device import AdbDeviceUsb
 from adb_shell.auth.keygen import keygen
 from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from pathlib import Path
-from os import environ
+import os
 from sys import argv
+import subprocess
 
 MUSIC_DIRECTORY_PATH = "/storage/6263-3431/Videoloader"
 
 
 def play(device: AdbDeviceUsb, album: str, song: str):
-    response = device.shell(
-        f"am start -a android.intent.action.VIEW -d \"file://{MUSIC_DIRECTORY_PATH}/{album}/{song}.mp3\" -t audio/mp3", decode=True)
-    print(response)
+    if os.name == "posix":
+        response = device.shell(
+            f"am start -a android.intent.action.VIEW -d \"file://{MUSIC_DIRECTORY_PATH}/{album}/{song}.mp3\" -t audio/mp3", decode=True)
+        print(response)
+    else:
+        subprocess.run(["adb", "shell", "am", "start", "-a", "android.intent.action.VIEW",
+                        "-d", f"file://{MUSIC_DIRECTORY_PATH}/{song}.mp3", "-t", "audio/mp3"])
 
 
 def main() -> None:
-    private_key = Path(environ.get(
+    private_key = Path(os.environ.get(
         "KEY_PATH", "~/.android_key/key").replace("~/", str(Path.home())+"/", 1))
     public_key = Path(str(private_key)+".pub")
     if not private_key.exists() or not public_key.exists():
