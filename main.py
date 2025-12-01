@@ -3,23 +3,13 @@ from adb_shell.auth.keygen import keygen
 from adb_shell.auth.sign_pythonrsa import PythonRSASigner
 from pathlib import Path
 import os
-from sys import argv
-import subprocess
-
-MUSIC_DIRECTORY_PATH = "/storage/6263-3431/Videoloader"
-
-
-def play(device: AdbDeviceUsb, album: str, song: str):
-    if os.name == "posix":
-        response = device.shell(
-            f"am start -a android.intent.action.VIEW -d \"file://{MUSIC_DIRECTORY_PATH}/{album}/{song}.mp3\" -t audio/mp3", decode=True)
-        print(response)
-    else:
-        subprocess.run(["adb", "shell", "am", "start", "-a", "android.intent.action.VIEW",
-                        "-d", f"file://{MUSIC_DIRECTORY_PATH}/{song}.mp3", "-t", "audio/mp3"])
+import multiprocessing
+from .music_daemon import music_player_daemon
+from .serial_communication_daemon import serial_daemon
+from .web_server import web_server
 
 
-def main() -> None:
+def connect_to_adb_device() -> AdbDeviceUsb:
     private_key = Path(os.environ.get(
         "KEY_PATH", "~/.android_key/key").replace("~/", str(Path.home())+"/", 1))
     public_key = Path(str(private_key)+".pub")
@@ -30,8 +20,26 @@ def main() -> None:
 
     device: AdbDeviceUsb = AdbDeviceUsb()
     device.connect(rsa_keys=[signer])
+    return device
 
-    play(device, argv[1], argv[2])
+
+def main() -> None:
+    device: "AdbDeviceUsb | None" = connect_to_adb_device() if os.name == "posix" else None
+    music_demon_process = multiprocessing.Process(
+        target=music_player_daemon, args=(device,), daemon=True)
+    serial_communication_process = multiprocessing.Process(
+        target=serial_daemon, daemon=True)
+    web_server_process = multiprocessing.Process(
+        target=web_server, daemon=True)
+
+    processes = [music_demon_process,
+                 serial_communication_process, web_server_process]
+
+    for process in processes:
+        process.start()
+
+    while input() != "exit":
+        pass
 
 
 if __name__ == "__main__":
