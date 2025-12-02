@@ -1,3 +1,2 @@
 adb_shell==0.4.4
-pause==0.3
 pyserial==3.5
