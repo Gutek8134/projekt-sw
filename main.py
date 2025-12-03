@@ -35,6 +35,8 @@ def main() -> None:
         playlist_update_event = manager.Event()
         shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]" = manager.dict(
         )
+        user_rfids: "DictProxy[str, str]" = manager.dict()
+        last_read_rfid: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
         queue: "Queue[str]" = manager.Queue()
         user: "ValueProxy[str]" = manager.Value(c_wchar_p, "default_user")
 
@@ -44,14 +46,15 @@ def main() -> None:
         print(shared_playlists)
 
         music_demon_process = multiprocessing.Process(
-            target=music_player_daemon, args=(device, shared_playlists, queue, user, playlist_update_event), daemon=False)
+            target=music_player_daemon, args=(device, shared_playlists, user_rfids, queue, user, playlist_update_event), daemon=False)
         serial_communication_process = multiprocessing.Process(
-            target=serial_daemon, args=(queue, playlist_update_event), daemon=True)
+            target=serial_daemon, args=(queue, last_read_rfid), daemon=True)
         web_server_process = multiprocessing.Process(
-            target=web_server, args=(queue, playlist_update_event), daemon=True)
+            target=web_server, args=(user_rfids, queue, playlist_update_event), daemon=True)
 
         processes = (music_demon_process,
-                     serial_communication_process, web_server_process)
+                     #  serial_communication_process,
+                     web_server_process)
 
         for process in processes:
             process.start()

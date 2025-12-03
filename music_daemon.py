@@ -10,6 +10,7 @@ from datetime import datetime, time, timedelta
 
 MUSIC_DIRECTORY_PATH = "/storage/sdcard0/Videoloader"
 LOCAL_MUSIC_PATH = "./music"
+MAX_VOLUME = 15
 
 
 def next_datetime(now: datetime, time: time) -> datetime:
@@ -85,7 +86,22 @@ def play(device: "AdbDeviceUsb | None", album: str, song: str) -> None:
                         "-d", f"file://{MUSIC_DIRECTORY_PATH}/{song}.mp3", "-t", "audio/mp3"])
 
 
-def music_player_daemon(device: "AdbDeviceUsb | None", shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", message_queue: "multiprocessing.Queue[str]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
+def change_volume(device: "AdbDeviceUsb | None", normal_volume: float):
+    if os.name == "posix":
+        assert device is not None, "Music daemon: PLAY: device set to None"
+        message = device.shell(
+            f"cmd media_session volume --set {round(normal_volume*MAX_VOLUME)}")
+        # print(message)
+    else:
+        subprocess.run(["adb", "shell", "cmd", "media_session",
+                       "volume", "--set", repr(round(normal_volume*25))])
+
+
+def change_user_by_rfid(user_rfids: "DictProxy[str, str]", current_user: "ValueProxy[str]", RFID: str):
+    current_user.set(user_rfids[RFID])
+
+
+def music_player_daemon(device: "AdbDeviceUsb | None", shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "multiprocessing.Queue[str]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
     multiprocessing.Process(target=scheduled_player,
                             args=(device, shared_playlists, current_user, playlist_update_event), daemon=True).start()
 
@@ -96,4 +112,13 @@ def music_player_daemon(device: "AdbDeviceUsb | None", shared_playlists: "DictPr
             break
 
         else:
-            print(message)
+            message_split = message.strip().split()
+            command = message_split[0]
+            arguments = message_split[1:]
+            if command == "change":
+                if arguments[0] == "volume":
+                    change_volume(device, float(arguments[1]))
+                elif arguments[0] == "user" and arguments[1] == "RFID":
+                    change_user_by_rfid(
+                        user_rfids, current_user, "".join(arguments[2:]))
+                    playlist_update_event.set()
