@@ -68,7 +68,7 @@ def main() -> None:
         serial_communication_process = multiprocessing.Process(
             target=serial_daemon, args=(queue, last_read_rfid), daemon=True)
         web_server_process = multiprocessing.Process(
-            target=web_server, args=(user_rfids, queue, playlist_update_event), daemon=True)
+            target=web_server, args=(shared_playlists, user_rfids, queue, playlist_update_event), daemon=True)
 
         processes = (music_demon_process,
                      #  serial_communication_process,
