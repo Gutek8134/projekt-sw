@@ -1,16 +1,25 @@
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event
-from multiprocessing.managers import DictProxy
+from multiprocessing.managers import DictProxy, ValueProxy
 from datetime import time
-from flask import Flask
+from flask import Flask, render_template, after_this_request, Response
 
 
-def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event) -> None:
+def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy) -> None:
     flask = Flask(__name__)
 
     @flask.route("/")
-    def hello_world():
-        return "<p>Hello, World!</p>"
+    def index():
+        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
+
+    @flask.route("/rfid")
+    def get_last_rfid():
+        @after_this_request
+        def add_header(response: Response):
+            response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
+
+        return {"text": last_read_rfid.get()}
 
     flask.run()
 

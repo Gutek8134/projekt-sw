@@ -68,7 +68,7 @@ def main() -> None:
         serial_communication_process = multiprocessing.Process(
             target=serial_daemon, args=(queue, last_read_rfid), daemon=True)
         web_server_process = multiprocessing.Process(
-            target=web_server, args=(shared_playlists, user_rfids, queue, playlist_update_event), daemon=True)
+            target=web_server, args=(shared_playlists, user_rfids, queue, playlist_update_event, last_read_rfid), daemon=True)
 
         processes = (music_demon_process,
                      #  serial_communication_process,
@@ -90,6 +90,9 @@ def main() -> None:
                     user_rfids.update(json.load(f))
 
                 playlist_update_event.set()
+
+            elif command.startswith("rfid"):
+                last_read_rfid.set("".join(command.split()[1:]))
 
         save(dict(shared_playlists), dict(user_rfids))
 

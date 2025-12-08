@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Interfejs</title>
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            const rfid_url = {{ url_for("get_last_rfid") | tojson
+        }};
+        const rfid_object = document.getElementById("rfid");
+
+        fetch(rfid_url).then(response => response.json()).then(json => { console.log(json); rfid_object.innerText = json["text"] || "None"; });
+
+        setInterval(() => {
+            console.log("Update");
+            fetch(rfid_url).then(response => response.json()).then(json => { console.log(json); rfid_object.innerText = json["text"] || "None"; });
+        }, 5000)
+
+        })
+    </script>
+</head>
+
+<body>
+    Playlists
+    <ul>
+        {% for user in users %}
+        <li>
+            {{user}}
+            <ul>
+                {% for time_song in playlists[user] %}
+                <li>
+                    {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <p>Last read RFID: <span id="rfid"></span></p>
+
+
+</body>
+
+</html>
