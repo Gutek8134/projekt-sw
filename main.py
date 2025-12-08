@@ -89,6 +89,8 @@ def main() -> None:
                     user_rfids.clear()
                     user_rfids.update(json.load(f))
 
+                playlist_update_event.set()
+
         save(dict(shared_playlists), dict(user_rfids))
 
     # Cleanup
