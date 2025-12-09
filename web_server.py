@@ -17,7 +17,8 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
 
     @flask.route("/")
     def index():
-        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
+        #return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
+        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value)#windows
 
     @flask.route("/rfid", methods=["GET"])
     def get_last_rfid():
@@ -26,7 +27,8 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response
 
-        return {"text": last_read_rfid.get()}
+        #return {"text": last_read_rfid.get()}
+        return {"text": last_read_rfid.value}#windows
 
     def allowed_file(filename: str):
         return '.' in filename and \
@@ -59,100 +61,125 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             file.save(save_path)
         return "SUCCESS"
 
-    flask.run()
+    @flask.route("/add_user", methods=["POST"])
+    def add_user():
+        username = request.form.get("username")
+        #check if empty argument
+        if not username:
+            flash('Empty username')
+            return "FAILED"
+        #check if username exits
+        if username in shared_playlists:
+            flash('Username already exists')
+            return "FAILED"
+
+        shared_playlists[username] = []
+        return "SUCCESS"
+
+    @flask.route("/assign_rfid", methods=["POST"])
+    def assign_rfid():
+        username = request.form.get("username")
+        rfid = request.form.get("rfid")
+
+        if not username or not rfid:
+            flash('Empty username or rfid')
+            return "FAILED"
+
+        if username not in shared_playlists:
+            flash('Username does not exits')
+            return "FAILED"
+
+        user_rfids[rfid] = username
+
+        return "SUCCESS"
+
+    @flask.route("/add_song", methods=["POST"])
+    def add_song():
+        username = request.form.get("username")
+        hour = request.form.get("hour")
+        album = request.form.get("album")
+        song = request.form.get("song")
+
+        if not username or not hour or not album or not song:
+            flash('Empty username or hour or album or song')
+            return "FAILED"
+        if username not in shared_playlists:
+            flash('User does not exits')
+            return "FAILED"
+
+        try:
+            h, m = map(int, hour.split(":"))
+            play_time = time(h, m)
+        except:
+            flash('wrong time format')
+            return "FAILED"
+
+        shared_playlists[username].append((play_time, album, song))
+        playlist_update_event.set()
+
+        return "SUCCESS"
+
+    @flask.route("/remove_song", methods=["POST"])
+    def remove_song():
+        username = request.form.get("username")
+        song = request.form.get("song")
+        if not username or not song:
+            flash('Empty username or song')
+            return "FAILED"
+        if username not in shared_playlists:
+            flash('User does not exits')
+            return "FAILED"
+
+        playlist = shared_playlists[username]
+
+        before_count = len(playlist)
+
+        shared_playlists[username] = [
+            entry for entry in playlist if entry[2] != song
+        ]
+
+        after_count = len(shared_playlists[username])
+
+        if before_count == after_count:
+            flash('Song not found')
+            return "FAILED"
+
+        playlist_update_event.set()
+        return "SUCCESS"
+
+    @flask.route("/change_user", methods=["POST"])
+    def change_user():
+        username = request.form.get("username")
+        if not username:
+            flash('Empty username')
+            return "FAILED"
+
+        if username not in shared_playlists():
+            flash('Username does not exits')
+            return "FAILED"
+
+        message_queue.put(f"change user {username}")
+
+        playlist_update_event.set()
+
+        return "SUCCESS"
+
+    flask.run(host="0.0.0.0", port=5000, debug=True)
+
+    #flask.run()
+
+#for testing on windows
+if __name__ == "__main__":
+    from multiprocessing import Manager, Queue, Event, Value
+    from datetime import time
+
+    manager = Manager()
+    shared_playlists = manager.dict()
+    user_rfids = manager.dict()
+    message_queue = Queue()
+    playlist_update_event = Event()
+    last_read_rfid = Value('i', 0)
+
+    web_server(shared_playlists, user_rfids, message_queue, playlist_update_event, last_read_rfid)
 
 
-def web_server_old(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event) -> None:
-    while True:
-        input_from_terminal = input()
-        if input_from_terminal == "STOP":
-            message_queue.put("STOP")
-            break
-        else:
-            input_from_terminal_split = input_from_terminal.strip().split()
-            command = input_from_terminal_split[0]
-            arguments = input_from_terminal_split[1:]
-            if command == "add_song":
-                if len(arguments) < 4:
-                    print("Usage: add_song <user> <HH:MM> <title> <path>")
-                    continue
-                user, time_string, title, path = (
-                    arguments[0], arguments[1], arguments[2], arguments[3],)
-                try:
-                    hour, minute = map(int, time_string.split(":"))
-                    time_object = time(hour, minute)
-                except Exception:
-                    print("Invalid time format. Use HH:MM")
-                    continue
-                if user not in shared_playlists:
-                    shared_playlists[user] = []
-
-                shared_playlists[user].append((time_object, title, path))
-                playlist_update_event.set()
-                print(f"Added song to {user}'s playlist.")
-
-            elif command == "remove_song":
-                if len(arguments) < 2:
-                    print("Usage: remove_song <user> <title>")
-                    continue
-
-                user, title = arguments[0], arguments[1]
-
-                if user not in shared_playlists:
-                    print("User not found.")
-                    continue
-
-                before = len(shared_playlists[user])
-                shared_playlists[user] = [
-                    entry for entry in shared_playlists[user] if entry[1] != title]
-
-                if len(shared_playlists[user]) != before:
-                    playlist_update_event.set()
-                    print(f"Removed '{title}' from {user}'s playlist.")
-                else:
-                    print("Song not found.")
-
-            elif command == "list_playlist":
-                if len(arguments) < 1:
-                    print("Usage: list_playlist <user>")
-                    continue
-                user = arguments[0]
-                if user not in shared_playlists:
-                    print("User not found.")
-                    continue
-                print(f"Playlist for {user}:")
-                for t, title, path in shared_playlists[user]:
-                    print(f"  {t}  |  {title}  |  {path}")
-
-            elif command == "add_rfid":
-                if len(arguments) < 2:
-                    print("Usage: add_rfid <rfid> <user>")
-                    continue
-
-                rfid, user = arguments[0], arguments[1]
-                user_rfids[rfid] = user
-                print(f"RFID {rfid} assigned to user {user}.")
-
-            elif command == "remove_rfid":
-                if len(arguments) < 1:
-                    print("Usage: remove_rfid <rfid>")
-                    continue
-                rfid = arguments[0]
-                if rfid in user_rfids:
-                    del user_rfids[rfid]
-                    print(f"RFID {rfid} removed.")
-                else:
-                    print("RFID not found.")
-
-            elif command == "list_rfid_users":
-                print("RFID → User mapping:")
-                for rfid, user in user_rfids.items():
-                    print(f"{rfid} : {user}")
-
-            elif command == "save":
-                message_queue.put("save")
-                print("Save requested.")
-
-            elif command == "load":
-                message_queue.put("load")
-                print("Load requested.")

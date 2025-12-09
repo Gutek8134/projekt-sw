@@ -40,7 +40,48 @@
 </head>
 
 <body>
-    Playlists
+    <h2>Playlists</h2>
+    <h3>Add user:</h3>
+    <form method="POST" action="{{ url_for('add_user') }}">
+    <input type="text" name="username" required>
+    <button type="submit">Add</button>
+    </form>
+
+    <h3>Assign RFID:</h3>
+    <form method="POST" action="{{ url_for('assign_rfid') }}">
+        <input type="text" name="rfid" placeholder="RFID" required>
+        <select name="username">
+            {% for user in users %}
+            <option value="{{ user }}">{{ user }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Assign</button>
+    </form>
+
+    <h3>Add song:</h3>
+    <form method="POST" action="{{ url_for('add_song') }}">
+        <select name="username">
+            {% for user in users %}
+            <option value="{{ user }}">{{ user }}</option>
+            {% endfor %}
+        </select>
+        <input type="text" name="hour" placeholder="HH:MM" required>
+        <input type="text" name="album" placeholder="album" required>
+        <input type="text" name="song" placeholder="song" required>
+        <button type="submit">Add</button>
+    </form>
+    
+    <h3>Change current user</h3>
+    <form method="POST" action="{{ url_for('change_user') }}">
+        <select name="username" required>
+            <option value="">-- select user --</option>
+            {% for user in users %}
+            <option value="{{ user }}">{{ user }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Change user</button>
+    </form>
+
     <ul>
         {% for user in users %}
         <li>
@@ -49,12 +90,18 @@
                 {% for time_song in playlists[user] %}
                 <li>
                     {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
+                    <form method="POST" action="{{ url_for('remove_song') }}" style="display:inline;">
+                        <input type="hidden" name="username" value="{{ user }}">
+                        <input type="hidden" name="song" value="{{ time_song[2] }}">
+                        <button type="submit">Remove</button>
+                    </form>
                 </li>
                 {% endfor %}
             </ul>
         </li>
         {% endfor %}
     </ul>
+       
 
     <p>Last read RFID: <span id="rfid"></span></p>
 
