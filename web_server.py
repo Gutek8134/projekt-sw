@@ -2,17 +2,24 @@ from multiprocessing import Queue
 from multiprocessing.synchronize import Event
 from multiprocessing.managers import DictProxy, ValueProxy
 from datetime import time
-from flask import Flask, render_template, after_this_request, Response
+from flask import Flask, render_template, after_this_request, Response, request, flash, redirect, url_for
+from werkzeug.utils import secure_filename
+import os.path
+
+UPLOAD_FOLDER = './music'
+ALLOWED_EXTENSIONS = {"mp3"}
 
 
 def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy) -> None:
     flask = Flask(__name__)
+    flask.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    flask.secret_key = "secret key"
 
     @flask.route("/")
     def index():
         return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
 
-    @flask.route("/rfid")
+    @flask.route("/rfid", methods=["GET"])
     def get_last_rfid():
         @after_this_request
         def add_header(response: Response):
@@ -20,6 +27,37 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             return response
 
         return {"text": last_read_rfid.get()}
+
+    def allowed_file(filename: str):
+        return '.' in filename and \
+            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    @flask.route('/upload', methods=['POST'])
+    def upload_file():
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            flash('No file part')
+            return "FAILED"
+        file = request.files['file']
+
+        assert file.filename is not None
+        # If the user does not select a file, the browser submits an
+        # empty file without a filename.
+        if file.filename == '':
+            flash('No selected file')
+            return "FAILED"
+
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename).lower()
+            if not os.path.exists(flask.config['UPLOAD_FOLDER']):
+                os.mkdir(flask.config['UPLOAD_FOLDER'])
+            if not os.path.exists(os.path.join(flask.config['UPLOAD_FOLDER'], request.form["album"])):
+                os.mkdir(os.path.join(
+                    flask.config['UPLOAD_FOLDER'], request.form["album"]))
+            save_path = os.path.join(
+                flask.config['UPLOAD_FOLDER'], request.form["album"], filename)
+            file.save(save_path)
+        return "SUCCESS"
 
     flask.run()
 
