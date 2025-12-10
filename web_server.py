@@ -1,5 +1,5 @@
 from multiprocessing import Queue
-from multiprocessing.synchronize import Event
+from threading import Event
 from multiprocessing.managers import DictProxy, ValueProxy
 from datetime import time
 from flask import Flask, render_template, after_this_request, Response, request, flash, redirect, url_for
@@ -175,15 +175,16 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
 
 # for testing on windows
 if __name__ == "__main__":
-    from multiprocessing import Manager, Queue, Event, Value
+    from multiprocessing import Manager
     from datetime import time
+    from ctypes import c_wchar_p
 
     manager = Manager()
     shared_playlists = manager.dict()
     user_rfids = manager.dict()
     message_queue = Queue()
-    playlist_update_event = Event()
-    last_read_rfid = Value('i', 0)
+    playlist_update_event = manager.Event()
+    last_read_rfid: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
 
     web_server(shared_playlists, user_rfids, message_queue,
                playlist_update_event, last_read_rfid)
