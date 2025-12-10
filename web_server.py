@@ -17,8 +17,10 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
 
     @flask.route("/")
     def index():
-        #return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
-        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value)#windows
+        if os.name == "posix":
+            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
+        # windows
+        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value)
 
     @flask.route("/rfid", methods=["GET"])
     def get_last_rfid():
@@ -27,8 +29,9 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response
 
-        #return {"text": last_read_rfid.get()}
-        return {"text": last_read_rfid.value}#windows
+        if os.name == "posix":
+            return {"text": last_read_rfid.get()}
+        return {"text": last_read_rfid.value}  # windows
 
     def allowed_file(filename: str):
         return '.' in filename and \
@@ -64,11 +67,11 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
     @flask.route("/add_user", methods=["POST"])
     def add_user():
         username = request.form.get("username")
-        #check if empty argument
+        # check if empty argument
         if not username:
             flash('Empty username')
             return "FAILED"
-        #check if username exits
+        # check if username exits
         if username in shared_playlists:
             flash('Username already exists')
             return "FAILED"
@@ -114,7 +117,8 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             flash('wrong time format')
             return "FAILED"
 
-        shared_playlists[username].append((play_time, album, song))
+        shared_playlists[username] = shared_playlists[username] + \
+            [((play_time, album, song))]
         playlist_update_event.set()
 
         return "SUCCESS"
@@ -154,7 +158,7 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             flash('Empty username')
             return "FAILED"
 
-        if username not in shared_playlists():
+        if username not in shared_playlists:
             flash('Username does not exits')
             return "FAILED"
 
@@ -164,11 +168,12 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
 
         return "SUCCESS"
 
-    flask.run(host="0.0.0.0", port=5000, debug=True)
+    flask.run(host="0.0.0.0", port=5000)
 
-    #flask.run()
+    # flask.run()
 
-#for testing on windows
+
+# for testing on windows
 if __name__ == "__main__":
     from multiprocessing import Manager, Queue, Event, Value
     from datetime import time
@@ -180,6 +185,5 @@ if __name__ == "__main__":
     playlist_update_event = Event()
     last_read_rfid = Value('i', 0)
 
-    web_server(shared_playlists, user_rfids, message_queue, playlist_update_event, last_read_rfid)
-
-
+    web_server(shared_playlists, user_rfids, message_queue,
+               playlist_update_event, last_read_rfid)

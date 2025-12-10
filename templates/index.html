@@ -4,7 +4,97 @@
 <head>
     <title>Interfejs</title>
     <script type="text/javascript">
-        function formSubmit(event) {
+        function addUserFormSubmit() {
+            var url = {{ url_for('add_user') | tojson
+        }};
+        console.log("submit");
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function () { // request successful
+            // we can use server response to our request now
+            console.log(request.responseText);
+        };
+
+        request.onerror = function () {
+            // request failed
+        };
+
+        request.send(new FormData(document.getElementById("add-user-form"))); // create FormData from form that triggered event
+        }
+
+        function assignRfidFormSubmit() {
+            var url = {{ url_for('assign_rfid') | tojson
+        }};
+        console.log("submit");
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function () { // request successful
+            // we can use server response to our request now
+            console.log(request.responseText);
+        };
+
+        request.onerror = function () {
+            // request failed
+        };
+
+        request.send(new FormData(document.getElementById("assign-rfid-form"))); // create FormData from form that triggered event
+        }
+
+        function addSongFormSubmit() {
+            var url = {{ url_for('add_song') | tojson
+        }};
+        console.log("submit");
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function () { // request successful
+            // we can use server response to our request now
+            console.log(request.responseText);
+        };
+
+        request.onerror = function () {
+            // request failed
+        };
+
+        request.send(new FormData(document.getElementById("add-song-form"))); // create FormData from form that triggered event
+        }
+
+        function changeUserFormSubmit() {
+            var url = {{ url_for('change_user') | tojson
+        }};
+        console.log("submit");
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function () { // request successful
+            // we can use server response to our request now
+            console.log(request.responseText);
+        };
+
+        request.onerror = function () {
+            // request failed
+        };
+
+        request.send(new FormData(document.getElementById("change-user-form"))); // create FormData from form that triggered event
+        }
+
+        function removeSongFormSubmit(id) {
+            var url = {{ url_for('remove_song') | tojson
+        }};
+        console.log("submit");
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function () { // request successful
+            // we can use server response to our request now
+            console.log(request.responseText);
+        };
+
+        request.onerror = function () {
+            // request failed
+        };
+
+        request.send(new FormData(document.getElementById(id))); // create FormData from form that triggered event
+        }
+
+        function fileFormSubmit() {
             var url = {{ url_for('upload_file') | tojson
         }};
         console.log("submit");
@@ -20,8 +110,8 @@
         };
 
         request.send(new FormData(document.getElementById("file-form"))); // create FormData from form that triggered event
-        event.preventDefault();
         }
+
         document.addEventListener("DOMContentLoaded", () => {
             const rfid_url = {{ url_for("get_last_rfid") | tojson
         }};
@@ -33,8 +123,6 @@
             console.log("Update");
             fetch(rfid_url, { method: "GET" }).then(response => response.json()).then(json => { console.log(json); rfid_object.innerText = json["text"] || "None"; });
         }, 5000)
-
-        document.getElementById("submit-button").onclick = formSubmit;
         })
     </script>
 </head>
@@ -42,24 +130,24 @@
 <body>
     <h2>Playlists</h2>
     <h3>Add user:</h3>
-    <form method="POST" action="{{ url_for('add_user') }}">
-    <input type="text" name="username" required>
-    <button type="submit">Add</button>
+    <form id="add-user-form">
+        <input type="text" name="username" required>
+        <button type="button" onclick="addUserFormSubmit()">Add</button>
     </form>
 
     <h3>Assign RFID:</h3>
-    <form method="POST" action="{{ url_for('assign_rfid') }}">
+    <form id="assign-rfid-form">
         <input type="text" name="rfid" placeholder="RFID" required>
         <select name="username">
             {% for user in users %}
             <option value="{{ user }}">{{ user }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Assign</button>
+        <button type="button" onclick="assignRfidFormSubmit()">Assign</button>
     </form>
 
     <h3>Add song:</h3>
-    <form method="POST" action="{{ url_for('add_song') }}">
+    <form id="add-song-form">
         <select name="username">
             {% for user in users %}
             <option value="{{ user }}">{{ user }}</option>
@@ -68,18 +156,18 @@
         <input type="text" name="hour" placeholder="HH:MM" required>
         <input type="text" name="album" placeholder="album" required>
         <input type="text" name="song" placeholder="song" required>
-        <button type="submit">Add</button>
+        <button type="button" onclick="addSongFormSubmit()">Add</button>
     </form>
-    
+
     <h3>Change current user</h3>
-    <form method="POST" action="{{ url_for('change_user') }}">
+    <form id="change-user-form">
         <select name="username" required>
             <option value="">-- select user --</option>
             {% for user in users %}
             <option value="{{ user }}">{{ user }}</option>
             {% endfor %}
         </select>
-        <button type="submit">Change user</button>
+        <button type="button" onclick="changeUserFormSubmit()">Change user</button>
     </form>
 
     <ul>
@@ -90,10 +178,11 @@
                 {% for time_song in playlists[user] %}
                 <li>
                     {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
-                    <form method="POST" action="{{ url_for('remove_song') }}" style="display:inline;">
+                    <form style="display:inline;" id="remove-song-form-{{loop.index}}">
                         <input type="hidden" name="username" value="{{ user }}">
                         <input type="hidden" name="song" value="{{ time_song[2] }}">
-                        <button type="submit">Remove</button>
+                        <button type="button"
+                            onclick="removeSongFormSubmit('remove-song-form-{{loop.index}}')">Remove</button>
                     </form>
                 </li>
                 {% endfor %}
@@ -101,14 +190,14 @@
         </li>
         {% endfor %}
     </ul>
-       
+
 
     <p>Last read RFID: <span id="rfid"></span></p>
 
     <form id="file-form">
         <input type="text" name="album" required placeholder="name of the album" />
         <input type="file" name="file" required />
-        <input id="submit-button" type="button" value="Upload" />
+        <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()" />
     </form>
 
 </body>
