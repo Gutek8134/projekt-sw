@@ -2,6 +2,19 @@
 <html lang="en">
 
 <head>
+    <style>
+        body {font-family: 'Lato', sans-serif;}
+        h1 {text-align: center; font-size: 70px;}
+        h2 {text-align: center; font-size: 35px; color: #330066;}
+        h3 {text-align: center; font-size: 25px; color: #330066;}
+        c {text-align: center; font-size: 25px;}
+        form {text-align: center; font-size: 25px;}
+        button {font-size: 20px; background-color: #ffff99;color: #330066;}
+        input {font-size: 20px; background-color: #ffff99;color: #330066;}
+        select {font-size: 20px; background-color: #ffff99;color: #330066;}
+        option {font-size: 20px; background-color: #ffff99;color: #330066;}
+        table {margin: 0px auto; align-self: center;font-size: 25px;}
+    </style>
     <title>Interfejs</title>
     <script type="text/javascript">
         function addUserFormSubmit() {
@@ -133,78 +146,127 @@
     </script>
 </head>
 
-<body>
-    <h2>Playlists</h2>
-    <h3>Add user:</h3>
-    <form id="add-user-form">
-        <input type="text" name="username" required>
-        <button type="button" onclick="addUserFormSubmit()">Add</button>
-    </form>
 
-    <h3>Assign RFID:</h3>
-    <form id="assign-rfid-form">
-        <input type="text" name="rfid" placeholder="RFID" required>
-        <select name="username">
-            {% for user in users %}
-            <option value="{{ user }}">{{ user }}</option>
-            {% endfor %}
-        </select>
-        <button type="button" onclick="assignRfidFormSubmit()">Assign</button>
-    </form>
-
-    <h3>Add song:</h3>
-    <form id="add-song-form">
-        <select name="username">
-            {% for user in users %}
-            <option value="{{ user }}">{{ user }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="hour" placeholder="HH:MM" required>
-        <input type="text" name="album" placeholder="album" required>
-        <input type="text" name="song" placeholder="song" required>
-        <button type="button" onclick="addSongFormSubmit()">Add</button>
-    </form>
-
-    <h3>Change current user</h3>
-    <form id="change-user-form">
-        <select name="username" required>
-            <option value="">-- select user --</option>
-            {% for user in users %}
-            <option value="{{ user }}">{{ user }}</option>
-            {% endfor %}
-        </select>
-        <button type="button" onclick="changeUserFormSubmit()">Change user</button>
-    </form>
-
-    <ul>
+<body style="background-color: #ccff99;font-family: Lato;">
+    <h1 style="color: #ffff99;background-color: #330066">Music Menagment</h1>
+    
+    <h2>List of users:</h2>
+    <c>
+    <table>
         {% for user in users %}
-        <li>
-            {{user}}
-            <ul>
+        <p>
+            <form style="font-size: 25px;">
+                <p style="font-size: 25px; background-color: #b3ffd9; color: #330066">User: <b>{{user}}</b></p></form>
+            <p>
                 {% for time_song in playlists[user] %}
-                <li>
+                <p>
                     {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
-                    <form style="display:inline;" id="remove-song-form-{{loop.index}}">
+                    <form style="display:inline;font-size: 30px;" id="remove-song-form-{{loop.index}}">
                         <input type="hidden" name="username" value="{{ user }}">
                         <input type="hidden" name="song" value="{{ time_song[2] }}">
                         <button type="button"
-                            onclick="removeSongFormSubmit('remove-song-form-{{loop.index}}')">Remove</button>
+                            onclick="removeSongFormSubmit('remove-song-form-{{loop.index}}')" style="font-size: 20px;">Remove</button>
                     </form>
-                </li>
+                </p>
                 {% endfor %}
-            </ul>
-        </li>
+            </p>
+        </p>
         {% endfor %}
-    </ul>
+    </table>
+    </c>
+    <p style="background-color: #b3ffd9; color: #b3ffd9;">easter egg</p>
+    <table>
+        <tr>
+            <td><h3>Add user: </h3></td>
+            <td>
+                <form id="add-user-form">
+                    <input type="text" name="username" required>
+                    <button type="button" onclick="addUserFormSubmit()">Add</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td><h3>Assign RFID:</h3></td>
+            <td>
+                <form id="assign-rfid-form">
+                    <input type="text" name="rfid" placeholder="RFID" required>
+                    <select name="username">
+                        {% for user in users %}
+                        <option value="{{ user }}">{{ user }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" onclick="assignRfidFormSubmit()">Assign</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <c><p style="font-size: 25px; color: #330066;"><b>Last read RFID: </b><span id="rfid"></span></p></c>
+    <table>
+        <tr>
+            <td><h3>Add song: </h3></td>
+            <td>
+                <form id="add-song-form">
+                    <select name="username">
+                        {% for user in users %}
+                        <option value="{{ user }}">{{ user }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" name="hour" placeholder="HH:MM" required>
+                    <input type="text" name="album" placeholder="album" required>
+                    <input type="text" name="song" placeholder="song" required>
+                    <button type="button" onclick="addSongFormSubmit()">Add</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+    <table>
+        <tr>
+            <td><h3>Change current user:</h3></td>
+            <td>
+                <form id="change-user-form">
+                    <select name="username" required>
+                        <option value="">-- select user --</option>
+                        {% for user in users %}
+                        <option value="{{ user }}">{{ user }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" onclick="changeUserFormSubmit()">Change user</button>
+                </form>
+            </td>
+        </tr>
+    </table>
 
+    <table>
+        <tr>
+            <td><h3>Upload file:</h3></td>
+            <td>
+                <form id="file-form">
+                    <input type="text" name="album" required placeholder="name of the album" />
+                    <input type="file" name="file" required />
+                    <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()" />
+                </form>
+            </td>
+        </tr>
+    </table>
 
-    <p>Last read RFID: <span id="rfid"></span></p>
-
-    <form id="file-form">
-        <input type="text" name="album" required placeholder="name of the album" />
-        <input type="file" name="file" required />
-        <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()" />
-    </form>
+    <h2>Uploaded songs</h2>
+    <c>
+    <table>
+    {% if songs %}
+    <p>
+        {% for album, song in songs %}
+        <p>
+            <strong>{{ song }}</strong> — album: <em>{{ album }}</em>
+        </p>
+        {% endfor %}
+    </p>
+    {% else %}
+    </table>
+    </c>
+    <c><p>No songs uploaded yet.</p></c>
+    {% endif %}
 
 </body>
 
