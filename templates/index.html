@@ -20,6 +20,7 @@
         };
 
         request.send(new FormData(document.getElementById("add-user-form"))); // create FormData from form that triggered event
+        location.reload();
         }
 
         function assignRfidFormSubmit() {
@@ -38,6 +39,7 @@
         };
 
         request.send(new FormData(document.getElementById("assign-rfid-form"))); // create FormData from form that triggered event
+        location.reload();
         }
 
         function addSongFormSubmit() {
@@ -56,6 +58,7 @@
         };
 
         request.send(new FormData(document.getElementById("add-song-form"))); // create FormData from form that triggered event
+        location.reload();
         }
 
         function changeUserFormSubmit() {
@@ -74,6 +77,7 @@
         };
 
         request.send(new FormData(document.getElementById("change-user-form"))); // create FormData from form that triggered event
+        location.reload();
         }
 
         function removeSongFormSubmit(id) {
@@ -92,6 +96,7 @@
         };
 
         request.send(new FormData(document.getElementById(id))); // create FormData from form that triggered event
+        location.reload();
         }
 
         function fileFormSubmit() {
@@ -110,6 +115,7 @@
         };
 
         request.send(new FormData(document.getElementById("file-form"))); // create FormData from form that triggered event
+        location.reload();
         }
 
         document.addEventListener("DOMContentLoaded", () => {
