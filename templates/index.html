@@ -4,16 +4,15 @@
 <head>
     <style>
         body {font-family: 'Lato', sans-serif;}
-        h1 {text-align: center; font-size: 70px;}
-        h2 {text-align: center; font-size: 35px; color: #330066;}
-        h3 {text-align: center; font-size: 25px; color: #330066;}
+        h1 {text-align: center; font-size: 70px; color: #ffffe6;background-color: #e67e22;}
+        h2 {text-align: center; font-size: 35px; color: #2c3e50;}
+        h3 {text-align: center; font-size: 25px; color: #2c3e50;}
         c {text-align: center; font-size: 25px;}
         form {text-align: center; font-size: 25px;}
-        button {font-size: 20px; background-color: #e4e4bf;color: #330066;cursor: pointer;}
-        button:active {font-size: 20px; background-color:#330066 ;color: #e4e4bf;cursor: pointer;}
-        input {font-size: 20px; background-color: #ffff99;color: #330066;}
-        select {font-size: 20px; background-color: #ffff99;color: #330066;}
-        option {font-size: 20px; background-color: #ffff99;color: #330066;}
+        button {font-size: 20px; background-color: #e67e22;color: #330066;cursor: pointer;border-radius: 12px;border: 2px solid #04AA6D;padding: 5px 10px;}
+        button:active {background-color:#d35400; ;color: #e4e4bf;}
+        button:hover {background-color:#d35400; ;color: #e4e4bf;}
+        input,select,option {font-size: 20px; background-color: #ecf0f1;color: #2c3e50;border-radius: 12px;border: 2px solid #04AA6D;padding: 5px 10px;}
         table {margin: 0px auto; align-self: center;font-size: 25px;}
     </style>
     <title>Interfejs</title>
@@ -173,8 +172,8 @@
 </head>
 
 
-<body style="background-color: #ccff99;font-family: Lato;">
-    <h1 style="color: #ffff99;background-color: #330066">Music Menagment</h1>
+<body>
+    <h1>Music Menagment</h1>
     
     <h2>List of users:</h2>
     <c>
@@ -182,7 +181,7 @@
         {% for user in users %}
         <p>
             <form style="font-size: 25px;">
-                <p style="font-size: 25px; background-color: #b3ffd9; color: #330066">User: <b>{{user}}</b></p></form>
+                <p style="font-size: 25px; color: #330066">User: <b>{{user}}</b></p></form>
             <p>
                 {% for time_song in playlists[user] %}
                 <p>
@@ -190,7 +189,7 @@
                     <form style="display:inline;font-size: 30px;" id="song-form-{{loop.index}};">
                         <input type="hidden" name="username" value="{{ user }}">
                         <input type="hidden" name="song" value="{{ time_song[2] }}">
-                        <input type="text" name="hour" placeholder="HH:MM" required>
+                        <input type="text" name="hour" placeholder="HH:MM" required maxlength="5" size="3">
                         <button type="button" onclick="changeHourFormSubmit('song-form-{{ loop.index }}')">Change hour</button>
                         <button type="button"
                             onclick="removeSongFormSubmit('song-form-{{loop.index}}')" style="font-size: 20px;">Remove</button>
@@ -203,7 +202,8 @@
     </table>
     </c>
 
-    <p style="background-color: #b3ffd9; color: #b3ffd9;">easter egg</p>
+    <h2>Operations:</h2>
+
     <table>
         <tr>
             <td><h3>Add user: </h3></td>
@@ -244,7 +244,7 @@
                         <option value="{{ user }}">{{ user }}</option>
                         {% endfor %}
                     </select>
-                    <input type="text" name="hour" placeholder="HH:MM" required>
+                    <input type="text" name="hour" placeholder="HH:MM" required required maxlength="5" size="3">
                     <input type="text" name="album" placeholder="album" required>
                     <input type="text" name="song" placeholder="song" required>
                     <button type="button" onclick="addSongFormSubmit()">Add</button>
@@ -276,8 +276,7 @@
                 <form id="file-form">
                     <input type="text" name="album" required placeholder="name of the album" />
                     <input type="file" name="file" required/>
-                    <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()" 
-                        style="font-size: 20px; background-color: #e4e4bf;color: #330066;cursor: pointer;"/>
+                    <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()"/>
                 </form>
             </td>
         </tr>
@@ -301,5 +300,4 @@
     {% endif %}
 
 </body>
-
 </html>
