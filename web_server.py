@@ -83,7 +83,9 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
     def assign_rfid():
         username = request.form.get("username")
         rfid = request.form.get("rfid")
-
+        if rfid=="None":
+            flash('Scan RFID')
+            return "FAILED"
         if not username or not rfid:
             flash('Empty username or rfid')
             return "FAILED"
@@ -151,6 +153,35 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
         playlist_update_event.set()
         return "SUCCESS"
 
+    @flask.route("/change_hour", methods=["POST"])
+    def change_hour():
+        username = request.form.get("username")
+        old_hour = request.form.get("old_hour")
+        album = request.form.get("album")
+        song = request.form.get("song")
+        new_hour = request.form.get("new_hour")
+
+        if not username or not album or not song or not new_hour:
+            flash('Empty username or hour or song')
+            return "FAILED"
+
+        if username not in shared_playlists:
+            flash('User does not exits')
+            return "FAILED"
+
+        playlist = shared_playlists[username]
+
+        for i, (hour, alb, sng) in enumerate(playlist):
+            if hour == old_hour and alb == album and sng == song:
+                playlist[i] = (new_hour, album, song)
+                playlist_update_event.set()
+                return "SUCCESS"
+        
+        flash('Song not found')
+        return "FAILED"
+
+
+
     @flask.route("/change_user", methods=["POST"])
     def change_user():
         username = request.form.get("username")
@@ -188,3 +219,6 @@ if __name__ == "__main__":
 
     web_server(shared_playlists, user_rfids, message_queue,
                playlist_update_event, last_read_rfid)
+
+
+
