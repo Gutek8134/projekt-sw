@@ -168,14 +168,8 @@
         request.open('POST', url, true);
         request.onload = function () { // request successful
             // we can use server response to our request now
-            if (request.responseText === "SUCCESS")
-                location.reload();
-            else
-                if (request.responseText === "SUCCESS")
-                    location.reload();
-                else
-                    console.log(request.responseText);
-
+            console.log(request.responseText);
+            location.reload();
         };
 
         request.onerror = function () {
@@ -263,7 +257,8 @@
             {% for user in users %}
             <p>
             <form style="font-size: 25px;">
-                <p style="font-size: 25px; color: #330066">User: <b>{{user}}</b></p>
+                <p style="font-size: 25px; color: #330066">User: <b>{{user}}</b> {%if user==current_user %}[*]{%endif%}
+                </p>
             </form>
             <p>
                 {% for time_song in playlists[user] %}

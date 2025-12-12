@@ -1,8 +1,8 @@
 - dopieścić wygląd strony (CSS) (half-done)
 - wywalić wymuszanie odświeżania przez klienta (done)
-- lista zuploadowanych piosenek (ready for veryfication)
-- edycja bez usuwania (ready for veryfication)
-- RFID nie wpisywać z łapy (ready for veryfication)
+- lista zuploadowanych piosenek (half-done)
+- edycja bez usuwania (done)
+- RFID nie wpisywać z łapy (fixed)
 - easing function na odległość, bo jest przeskok (done)
 - pobrać kilka piosenek i wrzucić
 - raport

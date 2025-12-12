@@ -143,13 +143,16 @@ def music_player_daemon(device: "AdbDeviceUsb | None", shared_playlists: "DictPr
             if command == "change":
                 if arguments[0] == "volume":
                     change_volume(device, float(arguments[1]))
-                elif arguments[0] == "user" and arguments[1] == "RFID":
-                    rfid = "".join(arguments[2:])
-                    if rfid not in user_rfids:
-                        continue
-                    change_user_by_rfid(
-                        user_rfids, current_user, rfid)
-                    playlist_update_event.set()
+                elif arguments[0] == "user":
+                    if arguments[1] == "RFID":
+                        rfid = "".join(arguments[2:])
+                        if rfid not in user_rfids:
+                            continue
+                        change_user_by_rfid(
+                            user_rfids, current_user, rfid)
+                    else:
+                        current_user.set(" ".join(arguments[1:]))
+                        playlist_update_event.set()
 
                 elif arguments[0] == "ease":
                     global ease

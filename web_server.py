@@ -10,7 +10,7 @@ UPLOAD_FOLDER = './music'
 ALLOWED_EXTENSIONS = {"mp3"}
 
 
-def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy, manager: SyncManager) -> None:
+def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy, current_user: ValueProxy, manager: SyncManager) -> None:
     flask = Flask(__name__)
     flask.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     flask.secret_key = "secret key"
@@ -26,9 +26,9 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
                 songs[album].append(song)
 
         if os.name == "posix":
-            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get(), songs=songs.items() if songs else False)
+            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get(), songs=songs.items() if songs else False, current_user=current_user.get())
         # windows
-        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value, songs=songs.items() if songs else False)
+        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value, songs=songs.items() if songs else False, current_user=current_user.value)
 
     @flask.route("/rfid", methods=["GET"])
     def get_last_rfid():
@@ -144,12 +144,14 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
             return "FAILED"
 
         playlist = shared_playlists[username]
+        playlist_copy = list(playlist)
 
         before_count = len(playlist)
 
         for entry in playlist:
             if entry[2] == song:
                 playlist.remove(entry)
+                break
 
         after_count = len(shared_playlists[username])
 
@@ -157,7 +159,18 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
             flash('Song not found')
             return "FAILED"
 
-        playlist_update_event.set()
+        if after_count == 0:
+            found = False
+            for user, user_playlist in shared_playlists.items():
+                if len(user_playlist) > 0:
+                    found = True
+                    current_user.set(user)
+                    playlist_update_event.set()
+                    break
+            if not found:
+                playlist.extend(playlist_copy)
+                flash("You are trying to remove the last song in all playlists. Don't.")
+                return "FAILED"
         return "SUCCESS"
 
     @flask.route("/change_hour", methods=["POST"])
@@ -167,8 +180,6 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
         album = request.form.get("album")
         song = request.form.get("song")
         new_hour = request.form.get("new_hour")
-
-        print(request.form, username, old_hour, album, song, new_hour)
 
         if not username or not album or not song or not new_hour:
             flash('Empty username or hour or song')
@@ -207,9 +218,7 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
         playlist = shared_playlists[username]
 
         for i, (hour, alb, sng) in enumerate(playlist):
-            print(hour, old_hour, alb, album, sng, song)
             if hour == old_hour and alb == album and sng == song:
-                print("here")
                 playlist[i] = (new_hour, album, song)
                 playlist_update_event.set()
                 return "SUCCESS"
@@ -228,8 +237,11 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
             flash('Username does not exits')
             return "FAILED"
 
-        message_queue.put(f"change user {username}")
+        if len(shared_playlists[username]) < 1:
+            flash(f"{username}'s playlist is empty")
+            return "FAILED"
 
+        current_user.set(username)
         playlist_update_event.set()
 
         return "SUCCESS"
@@ -253,6 +265,7 @@ if __name__ == "__main__":
     message_queue = Queue()
     playlist_update_event = manager.Event()
     last_read_rfid: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
+    user: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
 
     with open(PLAYLISTS_FILE, "r") as f:
         shared_playlists.clear()
@@ -267,4 +280,4 @@ if __name__ == "__main__":
         user_rfids.update(json.load(f))
 
     web_server(shared_playlists, user_rfids, message_queue,
-               playlist_update_event, last_read_rfid, manager)
+               playlist_update_event, last_read_rfid, user, manager)
