@@ -52,7 +52,7 @@ def main() -> None:
             shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]" = manager.dict(
                 {k: manager.list([(time(v[0], v[1]), v[2], v[3]) for v in l]) for k, l in deserialized.items()})
 
-        with open(PLAYLISTS_FILE, "r") as f:
+        with open(RFIDS_FILE, "r") as f:
             user_rfids: "DictProxy[str, str]" = manager.dict(json.load(f))
         last_read_rfid: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
         queue: "Queue[str]" = manager.Queue()
