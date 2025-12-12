@@ -1,6 +1,6 @@
 from multiprocessing import Queue
 from multiprocessing.synchronize import Event
-from multiprocessing.managers import DictProxy, ValueProxy
+from multiprocessing.managers import DictProxy, ListProxy, SyncManager
 from datetime import time
 from flask import Flask, render_template, after_this_request, Response, request, flash, redirect, url_for
 from werkzeug.utils import secure_filename
@@ -9,7 +9,8 @@ import os.path
 UPLOAD_FOLDER = './music'
 ALLOWED_EXTENSIONS = {"mp3"}
 
-def terminal_comunication(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event) -> None:
+
+def terminal_comunication(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, manager: SyncManager) -> None:
     while True:
         input_from_terminal = input()
         if input_from_terminal == "STOP":
@@ -32,7 +33,7 @@ def terminal_comunication(shared_playlists: "DictProxy[str, list[tuple[time, str
                     print("Invalid time format. Use HH:MM")
                     continue
                 if user not in shared_playlists:
-                    shared_playlists[user] = []
+                    shared_playlists[user].clear()
 
                 shared_playlists[user].append((time_object, title, path))
                 playlist_update_event.set()
@@ -50,8 +51,8 @@ def terminal_comunication(shared_playlists: "DictProxy[str, list[tuple[time, str
                     continue
 
                 before = len(shared_playlists[user])
-                shared_playlists[user] = [
-                    entry for entry in shared_playlists[user] if entry[1] != title]
+                shared_playlists[user] = manager.list([
+                    entry for entry in shared_playlists[user] if entry[1] != title])
 
                 if len(shared_playlists[user]) != before:
                     playlist_update_event.set()

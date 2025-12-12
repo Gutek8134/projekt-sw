@@ -8,7 +8,7 @@ from music_daemon import music_player_daemon
 from serial_communication_daemon import serial_daemon
 from web_server import web_server
 from datetime import time, datetime
-from multiprocessing.managers import DictProxy, ValueProxy
+from multiprocessing.managers import DictProxy, ValueProxy, ListProxy
 from queue import Queue
 from ctypes import c_wchar_p
 from time import sleep
@@ -49,8 +49,8 @@ def main() -> None:
         with open(PLAYLISTS_FILE, "r") as f:
             deserialized: dict[str,
                                list[tuple[int, int, str, str]]] = json.load(f)
-            shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]" = manager.dict(
-                {k: [(time(v[0], v[1]), v[2], v[3]) for v in l] for k, l in deserialized.items()})
+            shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]" = manager.dict(
+                {k: manager.list([(time(v[0], v[1]), v[2], v[3]) for v in l]) for k, l in deserialized.items()})
 
         with open(PLAYLISTS_FILE, "r") as f:
             user_rfids: "DictProxy[str, str]" = manager.dict(json.load(f))
@@ -79,11 +79,16 @@ def main() -> None:
 
         while (command := input()) != "exit":
             if command == "save":
-                save(dict(shared_playlists), dict(user_rfids))
+                save({k: list(v)
+                     for k, v in shared_playlists.items()}, dict(user_rfids))
             elif command == "load":
                 with open(PLAYLISTS_FILE, "r") as f:
                     shared_playlists.clear()
-                    shared_playlists.update(json.load(f))
+                    loaded = json.load(f)
+                    for key, v in loaded:
+                        v: list[tuple[int, int, str, str]]
+                        shared_playlists[key] = manager.list([
+                            (time(el[0], el[1]), el[2], el[3]) for el in v])
 
                 with open(RFIDS_FILE, "r") as f:
                     user_rfids.clear()
@@ -94,7 +99,8 @@ def main() -> None:
             elif command.startswith("rfid"):
                 last_read_rfid.set("".join(command.split()[1:]))
 
-        save(dict(shared_playlists), dict(user_rfids))
+        save({k: list(v)
+              for k, v in shared_playlists.items()}, dict(user_rfids))
 
     # Cleanup
     music_demon_process.terminate()

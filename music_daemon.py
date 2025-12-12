@@ -21,9 +21,9 @@ def next_datetime(now: datetime, time: time) -> datetime:
     return future
 
 
-def scheduled_player(device: "AdbDeviceUsb | None", playlists: "DictProxy[str, list[tuple[time, str, str]]]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
-    current_playlist: list[tuple[time, str, str]
-                           ] = playlists[current_user.get()]
+def scheduled_player(device: "AdbDeviceUsb | None", playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
+    current_playlist: ListProxy[tuple[time, str, str]
+                                ] = playlists[current_user.get()]
     # Sort by time
     current_playlist.sort(key=lambda t: next_datetime(datetime.now(), t[0]))
 
@@ -49,8 +49,8 @@ def scheduled_player(device: "AdbDeviceUsb | None", playlists: "DictProxy[str, l
         playlist_update_event.clear()
 
         # Update playlist
-        current_playlist: list[tuple[time, str, str]
-                               ] = playlists[current_user.get()]
+        current_playlist: ListProxy[tuple[time, str, str]
+                                    ] = playlists[current_user.get()]
         current_playlist.sort(
             key=lambda t: next_datetime(datetime.now(), t[0]))
 
@@ -122,7 +122,7 @@ def change_user_by_rfid(user_rfids: "DictProxy[str, str]", current_user: "ValueP
     current_user.set(user_rfids[RFID])
 
 
-def music_player_daemon(device: "AdbDeviceUsb | None", shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "multiprocessing.Queue[str]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
+def music_player_daemon(device: "AdbDeviceUsb | None", shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "multiprocessing.Queue[str]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
     multiprocessing.Process(target=scheduled_player,
                             args=(device, shared_playlists, current_user, playlist_update_event), daemon=True).start()
     change_volume(device, 0.6)

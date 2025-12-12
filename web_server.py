@@ -1,6 +1,6 @@
 from multiprocessing import Queue
 from threading import Event
-from multiprocessing.managers import DictProxy, ValueProxy
+from multiprocessing.managers import DictProxy, ValueProxy, ListProxy
 from datetime import time
 from flask import Flask, render_template, after_this_request, Response, request, flash, redirect, url_for
 from werkzeug.utils import secure_filename
@@ -10,7 +10,7 @@ UPLOAD_FOLDER = './music'
 ALLOWED_EXTENSIONS = {"mp3"}
 
 
-def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy) -> None:
+def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy) -> None:
     flask = Flask(__name__)
     flask.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     flask.secret_key = "secret key"
@@ -76,14 +76,14 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             flash('Username already exists')
             return "FAILED"
 
-        shared_playlists[username] = []
+        shared_playlists[username].clear()
         return "SUCCESS"
 
     @flask.route("/assign_rfid", methods=["POST"])
     def assign_rfid():
         username = request.form.get("username")
         rfid = request.form.get("rfid")
-        if rfid=="None":
+        if rfid == "None":
             flash('Scan RFID')
             return "FAILED"
         if not username or not rfid:
@@ -119,8 +119,7 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
             flash('wrong time format')
             return "FAILED"
 
-        shared_playlists[username] = shared_playlists[username] + \
-            [((play_time, album, song))]
+        shared_playlists[username].append((play_time, album, song))
         playlist_update_event.set()
 
         return "SUCCESS"
@@ -140,9 +139,9 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
 
         before_count = len(playlist)
 
-        shared_playlists[username] = [
-            entry for entry in playlist if entry[2] != song
-        ]
+        for entry in playlist:
+            if entry[2] == song:
+                playlist.remove(entry)
 
         after_count = len(shared_playlists[username])
 
@@ -161,8 +160,36 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
         song = request.form.get("song")
         new_hour = request.form.get("new_hour")
 
+        print(request.form, username, old_hour, album, song, new_hour)
+
         if not username or not album or not song or not new_hour:
             flash('Empty username or hour or song')
+            return "FAILED"
+
+        if not old_hour:
+            flash("Something's wrong with the server")
+            return "FAILED"
+
+        new_hour = new_hour.split(":")
+        if len(new_hour) < 2:
+            flash("New hour is in wrong format")
+            return "FAILED"
+
+        try:
+            new_hour = time(int(new_hour[0]), int(new_hour[1]))
+        except:
+            flash("New hour is in wrong format")
+            return "FAILED"
+
+        old_hour = old_hour.split(":")
+        if len(old_hour) < 2:
+            flash("Old hour is in wrong format")
+            return "FAILED"
+
+        try:
+            old_hour = time(int(old_hour[0]), int(old_hour[1]))
+        except:
+            flash("Old hour is in wrong format")
             return "FAILED"
 
         if username not in shared_playlists:
@@ -172,15 +199,15 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
         playlist = shared_playlists[username]
 
         for i, (hour, alb, sng) in enumerate(playlist):
+            print(hour, old_hour, alb, album, sng, song)
             if hour == old_hour and alb == album and sng == song:
+                print("here")
                 playlist[i] = (new_hour, album, song)
                 playlist_update_event.set()
                 return "SUCCESS"
-        
+
         flash('Song not found')
         return "FAILED"
-
-
 
     @flask.route("/change_user", methods=["POST"])
     def change_user():
@@ -207,8 +234,10 @@ def web_server(shared_playlists: "DictProxy[str, list[tuple[time, str, str]]]", 
 # for testing on windows
 if __name__ == "__main__":
     from multiprocessing import Manager
+    from main import PLAYLISTS_FILE, RFIDS_FILE
     from datetime import time
     from ctypes import c_wchar_p
+    import json
 
     manager = Manager()
     shared_playlists = manager.dict()
@@ -217,8 +246,17 @@ if __name__ == "__main__":
     playlist_update_event = manager.Event()
     last_read_rfid: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
 
+    with open(PLAYLISTS_FILE, "r") as f:
+        shared_playlists.clear()
+        loaded: dict = json.load(f)
+        for key, v in loaded.items():
+            v: list[tuple[int, int, str, str]]
+            shared_playlists[key] = manager.list([
+                (time(el[0], el[1]), el[2], el[3]) for el in v])
+
+    with open(RFIDS_FILE, "r") as f:
+        user_rfids.clear()
+        user_rfids.update(json.load(f))
+
     web_server(shared_playlists, user_rfids, message_queue,
                playlist_update_event, last_read_rfid)
-
-
-

@@ -3,17 +3,77 @@
 
 <head>
     <style>
-        body {font-family: 'Lato', sans-serif;}
-        h1 {text-align: center; font-size: 70px; color: #ffffe6;background-color: #e67e22;}
-        h2 {text-align: center; font-size: 35px; color: #2c3e50;}
-        h3 {text-align: center; font-size: 25px; color: #2c3e50;}
-        c {text-align: center; font-size: 25px;}
-        form {text-align: center; font-size: 25px;}
-        button {font-size: 20px; background-color: #e67e22;color: #330066;cursor: pointer;border-radius: 12px;border: 2px solid #04AA6D;padding: 5px 10px;}
-        button:active {background-color:#d35400; ;color: #e4e4bf;}
-        button:hover {background-color:#d35400; ;color: #e4e4bf;}
-        input,select,option {font-size: 20px; background-color: #ecf0f1;color: #2c3e50;border-radius: 12px;border: 2px solid #04AA6D;padding: 5px 10px;}
-        table {margin: 0px auto; align-self: center;font-size: 25px;}
+        body {
+            font-family: 'Lato', sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 70px;
+            color: #ffffe6;
+            background-color: #e67e22;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 35px;
+            color: #2c3e50;
+        }
+
+        h3 {
+            text-align: center;
+            font-size: 25px;
+            color: #2c3e50;
+        }
+
+        c {
+            text-align: center;
+            font-size: 25px;
+        }
+
+        form {
+            text-align: center;
+            font-size: 25px;
+        }
+
+        button {
+            font-size: 20px;
+            background-color: #e67e22;
+            color: #330066;
+            cursor: pointer;
+            border-radius: 12px;
+            border: 2px solid #04AA6D;
+            padding: 5px 10px;
+        }
+
+        button:active {
+            background-color: #d35400;
+            ;
+            color: #e4e4bf;
+        }
+
+        button:hover {
+            background-color: #d35400;
+            ;
+            color: #e4e4bf;
+        }
+
+        input,
+        select,
+        option {
+            font-size: 20px;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border-radius: 12px;
+            border: 2px solid #04AA6D;
+            padding: 5px 10px;
+        }
+
+        table {
+            margin: 0px auto;
+            align-self: center;
+            font-size: 25px;
+        }
     </style>
     <title>Interfejs</title>
     <script type="text/javascript">
@@ -26,14 +86,14 @@
         request.onload = function () { // request successful
             // we can use server response to our request now
             console.log(request.responseText);
+            location.reload();
         };
 
         request.onerror = function () {
             // request failed
         };
 
-        request.send(new FormData(document.getElementById("add-user-form"))); // create FormData from form that triggered event
-        location.reload();
+        request.send(new FormData(document.getElementById("add-user-form")));
         }
 
         function assignRfidFormSubmit() {
@@ -45,14 +105,14 @@
         request.onload = function () { // request successful
             // we can use server response to our request now
             console.log(request.responseText);
+            location.reload();
         };
 
         request.onerror = function () {
             // request failed
         };
 
-        request.send(new FormData(document.getElementById("assign-rfid-form"))); // create FormData from form that triggered event
-        location.reload();
+        request.send(new FormData(document.getElementById("assign-rfid-form")));
         }
 
         function addSongFormSubmit() {
@@ -64,6 +124,7 @@
         request.onload = function () { // request successful
             // we can use server response to our request now
             console.log(request.responseText);
+            location.reload();
         };
 
         request.onerror = function () {
@@ -71,7 +132,6 @@
         };
 
         request.send(new FormData(document.getElementById("add-song-form"))); // create FormData from form that triggered event
-        location.reload();
         }
 
         function changeUserFormSubmit() {
@@ -83,17 +143,17 @@
         request.onload = function () { // request successful
             // we can use server response to our request now
             console.log(request.responseText);
+            location.reload();
         };
 
         request.onerror = function () {
             // request failed
         };
 
-        request.send(new FormData(document.getElementById("change-user-form"))); // create FormData from form that triggered event
-        location.reload();
+        request.send(new FormData(document.getElementById("change-user-form")));
         }
 
-        function removeSongFormSubmit(id) {
+        function removeSongFormSubmit(get) {
             var url = {{ url_for('remove_song') | tojson
         }};
         console.log("submit");
@@ -101,15 +161,21 @@
         request.open('POST', url, true);
         request.onload = function () { // request successful
             // we can use server response to our request now
-            console.log(request.responseText);
+            if (request.responseText === "SUCCESS")
+                location.reload();
+            else
+                if (request.responseText === "SUCCESS")
+                    location.reload();
+                else
+                    console.log(request.responseText);
+
         };
 
         request.onerror = function () {
             // request failed
         };
-
-        request.send(new FormData(document.getElementById(id))); // create FormData from form that triggered event
-        location.reload();
+        console.log(get);
+        request.send(new FormData(document.getElementById(get))); // create FormData from form that triggered event
         }
 
         function fileFormSubmit() {
@@ -121,14 +187,36 @@
         request.onload = function () { // request successful
             // we can use server response to our request now
             console.log(request.responseText);
+            location.reload();
         };
 
         request.onerror = function () {
             // request failed
         };
 
-        request.send(new FormData(document.getElementById("file-form"))); // create FormData from form that triggered event
-        location.reload();
+        request.send(new FormData(document.getElementById("file-form")));
+        }
+
+        function changeHourFormSubmit(get) {
+            var url = {{ url_for('change_hour') | tojson
+        }};
+        console.log("submit");
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+
+        request.onload = function () {
+            console.log(request.responseText);
+            location.reload();
+        };
+
+        request.onerror = function () { };
+        console.log(get);
+        request.send(new FormData(document.getElementById(get)));
+        }
+
+        function fillRfid() {
+            const rfid_url = {{ url_for("get_last_rfid") | tojson
+        }};
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -143,30 +231,11 @@
             fetch(rfid_url, { method: "GET" }).then(response => response.json()).then(json => { console.log(json); rfid_object.innerText = json["text"] || "None"; });
         }, 5000)
 
-        function changeHourFormSubmit(id) {
-            var url = {{ url_for('change_hour') | tojson }};
-            console.log("submit");
-            var request = new XMLHttpRequest();
-            request.open('POST', url, true);
+        const input = document.getElementById("rfid-input");
 
-            request.onload = function () {
-                console.log(request.responseText);
-            };
-
-            request.onerror = function () { };
-
-            request.send(new FormData(document.getElementById(id)));
-            location.reload();
-        }
-
-        function fillRfid() {
-            const rfid_url = {{ url_for("get_last_rfid") | tojson }};
-            const input = document.getElementById("rfid-input");
-
-            fetch(rfid_url, { method: "GET" }).then(response => response.json()).then(json => {input.value = json["text"] || "";});
-        }
-
+        fetch(rfid_url, { method: "GET" }).then(response => response.json()).then(json => { input.value = json["text"] || ""; });
         })
+
 
     </script>
 </head>
@@ -174,39 +243,48 @@
 
 <body>
     <h1>Music Management</h1>
-    
+
+    {% for message in get_flashed_messages() %}
+    <p class="error">{{message}}</p>
+    {% endfor %}
+
     <h2>List of users:</h2>
     <c>
-    <table>
-        {% for user in users %}
-        <p>
+        <table>
+            {% for user in users %}
+            <p>
             <form style="font-size: 25px;">
-                <p style="font-size: 25px; color: #330066">User: <b>{{user}}</b></p></form>
+                <p style="font-size: 25px; color: #330066">User: <b>{{user}}</b></p>
+            </form>
             <p>
                 {% for time_song in playlists[user] %}
-                <p>
-                    {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
-                    <form style="display:inline;font-size: 30px;" id="song-form-{{loop.index}};">
-                        <input type="hidden" name="username" value="{{ user }}">
-                        <input type="hidden" name="song" value="{{ time_song[2] }}">
-                        <input type="text" name="hour" placeholder="HH:MM" required maxlength="5" size="3">
-                        <button type="button" onclick="changeHourFormSubmit('song-form-{{ loop.index }}')">Change hour</button>
-                        <button type="button"
-                            onclick="removeSongFormSubmit('song-form-{{loop.index}}')" style="font-size: 20px;">Remove</button>
-                    </form>
-                </p>
-                {% endfor %}
+            <p>
+                {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
+            <form style="display:inline;font-size: 30px;" id="song-form-{{loop.index}}">
+                <input type="hidden" name="username" value="{{ user }}">
+                <input type="hidden" name="album" value="{{ time_song[1] }}">
+                <input type="hidden" name="song" value="{{ time_song[2] }}">
+                <input type="hidden" name="old_hour" value="{{ time_song[0] }}">
+                <input type="text" name="new_hour" placeholder="HH:MM" required maxlength="5" size="3">
+                <button type="button" onclick="changeHourFormSubmit('song-form-{{ loop.index }}')">Change hour</button>
+                <button type="button" onclick="removeSongFormSubmit('song-form-{{ loop.index }}')"
+                    style="font-size: 20px;">Remove</button>
+            </form>
             </p>
-        </p>
-        {% endfor %}
-    </table>
+            {% endfor %}
+            </p>
+            </p>
+            {% endfor %}
+        </table>
     </c>
 
     <h2>Operations:</h2>
 
     <table>
         <tr>
-            <td><h3>Add user: </h3></td>
+            <td>
+                <h3>Add user: </h3>
+            </td>
             <td>
                 <form id="add-user-form">
                     <input type="text" name="username" required>
@@ -217,7 +295,9 @@
     </table>
     <table>
         <tr>
-            <td><h3>Assign RFID:</h3></td>
+            <td>
+                <h3>Assign RFID:</h3>
+            </td>
             <td>
                 <form id="assign-rfid-form">
                     <input id="rfid-input" type="text" name="rfid" placeholder="RFID" required>
@@ -232,11 +312,15 @@
             </td>
         </tr>
     </table>
-    <c><p style="font-size: 25px; color: #330066;"><b>Last read RFID: </b><span id="rfid"></span></p></c>
+    <c>
+        <p style="font-size: 25px; color: #330066;"><b>Last read RFID: </b><span id="rfid"></span></p>
+    </c>
 
     <table>
         <tr>
-            <td><h3>Add song: </h3></td>
+            <td>
+                <h3>Add song: </h3>
+            </td>
             <td>
                 <form id="add-song-form">
                     <select name="username">
@@ -254,7 +338,9 @@
     </table>
     <table>
         <tr>
-            <td><h3>Change current user:</h3></td>
+            <td>
+                <h3>Change current user:</h3>
+            </td>
             <td>
                 <form id="change-user-form">
                     <select name="username" required>
@@ -271,12 +357,14 @@
 
     <table>
         <tr>
-            <td><h3>Upload file:</h3></td>
+            <td>
+                <h3>Upload file:</h3>
+            </td>
             <td>
                 <form id="file-form">
                     <input type="text" name="album" required placeholder="name of the album" />
-                    <input type="file" name="file" required/>
-                    <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()"/>
+                    <input type="file" name="file" required />
+                    <input id="submit-button" type="button" value="Upload" onclick="fileFormSubmit()" />
                 </form>
             </td>
         </tr>
@@ -284,20 +372,23 @@
 
     <h2>Uploaded songs</h2>
     <c>
-    <table>
-    {% if songs %}
-    <p>
-        {% for album, song in songs %}
-        <p>
-            <strong>{{ song }}</strong> — album: <em>{{ album }}</em>
-        </p>
-        {% endfor %}
-    </p>
-    {% else %}
-    </table>
+        <table>
+            {% if songs %}
+            <p>
+                {% for album, song in songs %}
+            <p>
+                <strong>{{ song }}</strong> — album: <em>{{ album }}</em>
+            </p>
+            {% endfor %}
+            </p>
+            {% else %}
+        </table>
     </c>
-    <c><p>No songs uploaded yet.</p></c>
+    <c>
+        <p>No songs uploaded yet.</p>
+    </c>
     {% endif %}
 
 </body>
+
 </html>
