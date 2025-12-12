@@ -333,8 +333,20 @@
                         {% endfor %}
                     </select>
                     <input type="text" name="hour" placeholder="HH:MM" required required maxlength="5" size="3">
-                    <input type="text" name="album" placeholder="album" required>
-                    <input type="text" name="song" placeholder="song" required>
+                    <select name="album" onchange="updateSongList()">
+                        <option value="">-- select album --</option>
+                        {% for album, song_list in songs %}
+                        <option value="{{ album }}">{{ album }}</option>
+                        {% endfor %}
+                    </select>
+                    <!--<input type="text" name="album" placeholder="album" required>-->
+                    <select name="song">
+                        <option value="">-- select song --</option>
+                        {% for song in songs[album]|first %}
+                        <option value="{{ song }}">{{ song }}</option>
+                        {% endfor %}
+                    </select>
+                    <!--<input type="text" name="song" placeholder="song" required>-->
                     <button type="button" onclick="addSongFormSubmit()">Add</button>
                 </form>
             </td>
