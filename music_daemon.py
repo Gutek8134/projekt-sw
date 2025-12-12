@@ -21,11 +21,15 @@ def next_datetime(now: datetime, time: time) -> datetime:
     return future
 
 
+def get_sorting_value(t: tuple[time, str, str]):
+    return next_datetime(datetime.now(), t[0])
+
+
 def scheduled_player(device: "AdbDeviceUsb | None", playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", current_user: "ValueProxy[str]", playlist_update_event: Event) -> None:
     current_playlist: ListProxy[tuple[time, str, str]
                                 ] = playlists[current_user.get()]
     # Sort by time
-    current_playlist.sort(key=lambda t: next_datetime(datetime.now(), t[0]))
+    current_playlist.sort(key=get_sorting_value)
 
     playlist: cycle[tuple[time, str, str]] = cycle(current_playlist)
 
@@ -52,7 +56,7 @@ def scheduled_player(device: "AdbDeviceUsb | None", playlists: "DictProxy[str, L
         current_playlist: ListProxy[tuple[time, str, str]
                                     ] = playlists[current_user.get()]
         current_playlist.sort(
-            key=lambda t: next_datetime(datetime.now(), t[0]))
+            key=get_sorting_value)
 
         playlist: cycle[tuple[time, str, str]] = cycle(current_playlist)
 
