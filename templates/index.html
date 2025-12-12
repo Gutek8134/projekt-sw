@@ -7,6 +7,13 @@
             font-family: 'Lato', sans-serif;
         }
 
+        p,
+        ul {
+            font-size: 25px;
+            margin: auto;
+            width: fit-content;
+        }
+
         h1 {
             text-align: center;
             font-size: 70px;
@@ -215,8 +222,10 @@
         }
 
         function fillRfid() {
-            const rfid_url = {{ url_for("get_last_rfid") | tojson
-        }};
+            const rfid_object = document.getElementById("rfid");
+            const rfid_input = document.getElementById("rfid-input");
+            if (rfid_object.innerText != "None")
+                rfid_input.value = rfid_object.innerText;
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -371,19 +380,20 @@
     </table>
 
     <h2>Uploaded songs</h2>
-    <c>
-        <table>
-            {% if songs %}
-            <p>
-                {% for album, song in songs %}
-            <p>
-                <strong>{{ song }}</strong> — album: <em>{{ album }}</em>
-            </p>
-            {% endfor %}
-            </p>
-            {% else %}
-        </table>
-    </c>
+    {% if songs %}
+    <div style="width: 100%;">
+        {% for album, song_names in songs %}
+        <p style="margin:auto">
+            album: <em>{{ album }}</em>
+        <ul style="margin:auto">
+            {%for song in song_names%}
+            <li>{{song}}</li>
+            {%endfor%}
+        </ul>
+        </p>
+        {% endfor %}
+    </div>
+    {% else %}
     <c>
         <p>No songs uploaded yet.</p>
     </c>

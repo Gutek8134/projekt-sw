@@ -1,6 +1,6 @@
 from multiprocessing import Queue
 from threading import Event
-from multiprocessing.managers import DictProxy, ValueProxy, ListProxy
+from multiprocessing.managers import DictProxy, ValueProxy, ListProxy, SyncManager
 from datetime import time
 from flask import Flask, render_template, after_this_request, Response, request, flash, redirect, url_for
 from werkzeug.utils import secure_filename
@@ -10,15 +10,23 @@ UPLOAD_FOLDER = './music'
 ALLOWED_EXTENSIONS = {"mp3"}
 
 
-def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy) -> None:
+def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]]]", user_rfids: "DictProxy[str, str]", message_queue: "Queue[str]", playlist_update_event: Event, last_read_rfid: ValueProxy, manager: SyncManager) -> None:
     flask = Flask(__name__)
     flask.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     flask.secret_key = "secret key"
 
     @flask.route("/")
     def index():
+        songs: dict[str, list[str]] = {}
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.mkdir(UPLOAD_FOLDER)
+        for album in os.listdir(UPLOAD_FOLDER):
+            songs[album] = []
+            for song in os.listdir(os.path.join(UPLOAD_FOLDER, album)):
+                songs[album].append(song)
+
         if os.name == "posix":
-            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get())
+            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get(), songs=songs.items() if songs else False)
         # windows
         return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value)
 
@@ -76,7 +84,7 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
             flash('Username already exists')
             return "FAILED"
 
-        shared_playlists[username].clear()
+        shared_playlists[username] = manager.list()
         return "SUCCESS"
 
     @flask.route("/assign_rfid", methods=["POST"])
@@ -259,4 +267,4 @@ if __name__ == "__main__":
         user_rfids.update(json.load(f))
 
     web_server(shared_playlists, user_rfids, message_queue,
-               playlist_update_event, last_read_rfid)
+               playlist_update_event, last_read_rfid, manager)
