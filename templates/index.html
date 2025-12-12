@@ -387,7 +387,7 @@
             album: <em>{{ album }}</em>
         <ul style="margin:auto">
             {%for song in song_names%}
-            <li>{{song}}</li>
+            <li>{{song.removesuffix(".mp3")}}</li>
             {%endfor%}
         </ul>
         </p>
