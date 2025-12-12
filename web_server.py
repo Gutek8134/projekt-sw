@@ -265,7 +265,7 @@ if __name__ == "__main__":
     message_queue = Queue()
     playlist_update_event = manager.Event()
     last_read_rfid: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
-    user: "ValueProxy[str]" = manager.Value(c_wchar_p, "")
+    user: "ValueProxy[str]" = manager.Value(c_wchar_p, "default_user")
 
     with open(PLAYLISTS_FILE, "r") as f:
         shared_playlists.clear()
