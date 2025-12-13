@@ -26,9 +26,9 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
                 songs[album].append(song)
 
         if os.name == "posix":
-            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get(), songs=songs.items() if songs else list(songs.items()), current_user=current_user.get())
+            return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.get(), songs=songs.items() if songs else list(songs.items()), songs_dict=songs, current_user=current_user.get())
         # windows
-        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value, songs=songs.items() if songs else list(songs.items()), current_user=current_user.value)
+        return render_template("index.html", users=shared_playlists.keys(), playlists=shared_playlists, rfid=last_read_rfid.value, songs=songs.items() if songs else list(songs.items()), songs_dict=songs, current_user=current_user.value)
 
     @flask.route("/rfid", methods=["GET"])
     def get_last_rfid():

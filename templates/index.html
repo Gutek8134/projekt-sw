@@ -222,6 +222,32 @@
                 rfid_input.value = rfid_object.innerText;
         }
 
+        const all_songs = {{ songs_dict | tojson
+        }};
+        function updateSongList() {
+            const album_select = document.getElementById("album-select");
+            const song_select = document.getElementById("song-select");
+            for (option of song_select.options)
+                if (option.value !== "")
+                    song_select.remove(option);
+
+
+            let songs = [];
+            if (album_select.value !== "") {
+                songs = all_songs[album_select.value] ?? [];
+            }
+            for (song of songs) {
+                if (song.endsWith(".mp3"))
+                    song = song.substr(0, song.length - ".mp3".length);
+
+                const option = document.createElement("option");
+                option.text = option.value = song;
+                song_select.appendChild(option);
+
+            }
+
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             const rfid_url = {{ url_for("get_last_rfid") | tojson
         }};
@@ -237,6 +263,8 @@
         const input = document.getElementById("rfid-input");
 
         fetch(rfid_url, { method: "GET" }).then(response => response.json()).then(json => { input.value = json["text"] || ""; });
+
+        updateSongList();
         })
 
 
@@ -333,14 +361,14 @@
                         {% endfor %}
                     </select>
                     <input type="text" name="hour" placeholder="HH:MM" required required maxlength="5" size="3">
-                    <select name="album" onchange="updateSongList()">
+                    <select name="album" onchange="updateSongList()" id="album-select">
                         <option value="">-- select album --</option>
                         {% for album, song_list in songs %}
                         <option value="{{ album }}">{{ album }}</option>
                         {% endfor %}
                     </select>
                     <!--<input type="text" name="album" placeholder="album" required>-->
-                    <select name="song">
+                    <select name="song" id="song-select">
                         <option value="">-- select song --</option>
                         {% for song in songs[album]|first %}
                         <option value="{{ song }}">{{ song }}</option>
