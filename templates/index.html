@@ -198,6 +198,25 @@
         request.send(new FormData(document.getElementById("file-form")));
         }
 
+        function fileDeleteSubmit(element) {
+            var url = {{ url_for('delete_file') | tojson
+        }};
+        console.log("submit", element.form, new FormData(element.form));
+        var request = new XMLHttpRequest();
+        request.open('POST', url, true);
+        request.onload = function () { // request successful
+            // we can use server response to our request now
+            console.log(request.responseText);
+            location.reload();
+        };
+
+        request.onerror = function () {
+            // request failed
+        };
+
+        request.send(new FormData(element.form));
+        }
+
         function changeHourFormSubmit(get) {
             var url = {{ url_for('change_hour') | tojson
         }};
@@ -292,14 +311,15 @@
                 {% for time_song in playlists[user] %}
             <p>
                 {{time_song[2]}} from album {{time_song[1]}} at {{time_song[0]}}
-            <form style="display:inline;font-size: 30px;" id="song-form-{{loop.index}}">
+            <form style="display:inline;font-size: 30px;" id="song-form-{{user}}-{{loop.index}}">
                 <input type="hidden" name="username" value="{{ user }}">
                 <input type="hidden" name="album" value="{{ time_song[1] }}">
                 <input type="hidden" name="song" value="{{ time_song[2] }}">
                 <input type="hidden" name="old_hour" value="{{ time_song[0] }}">
                 <input type="text" name="new_hour" placeholder="HH:MM" required maxlength="5" size="3">
-                <button type="button" onclick="changeHourFormSubmit('song-form-{{ loop.index }}')">Change hour</button>
-                <button type="button" onclick="removeSongFormSubmit('song-form-{{ loop.index }}')"
+                <button type="button" onclick="changeHourFormSubmit('song-form-{{user}}-{{ loop.index }}')">Change
+                    hour</button>
+                <button type="button" onclick="removeSongFormSubmit('song-form-{{user}}-{{ loop.index }}')"
                     style="font-size: 20px;">Remove</button>
             </form>
             </p>
@@ -422,7 +442,11 @@
             album: <em>{{ album }}</em>
         <ul style="margin:auto">
             {%for song in song_names%}
-            <li>{{song.removesuffix(".mp3")}}</li>
+            <li>{{song.removesuffix(".mp3")}}
+                <form><input type="hidden" name="album" value="{{album}}" /><input type="hidden" name="song"
+                        value="{{song}}" /><input type="button" value="Delete" onclick="fileDeleteSubmit(this)" />
+                </form>
+            </li>
             {%endfor%}
         </ul>
         </p>

@@ -72,6 +72,49 @@ def web_server(shared_playlists: "DictProxy[str, ListProxy[tuple[time, str, str]
             file.save(save_path)
         return "SUCCESS"
 
+    @flask.route('/delete', methods=['POST'])
+    def delete_file():
+        album = request.form.get("album")
+        song = request.form.get("song")
+        if album is None:
+            flash("Album is none")
+            return "FAILED"
+        if song is None:
+            flash("Song is none")
+            return "FAILED"
+
+        path = os.path.join(flask.config["UPLOAD_FOLDER"], album, song)
+
+        if not os.path.exists(path):
+            flash("File does not exist")
+            return "FAILED"
+
+        playlists_copy = {k: [v for v in l]
+                          for k, l in shared_playlists.items()}
+
+        for user, playlist in shared_playlists.items():
+            shared_playlists[user] = manager.list(
+                [play_song for play_song in playlist if play_song[1] != album and play_song[2] != song])
+
+        c_user = current_user.get() if (os.name == "posix") else current_user.value
+        if len(shared_playlists[c_user]) == 0:
+            found = False
+            for user, user_playlist in shared_playlists.items():
+                if len(user_playlist) > 0:
+                    found = True
+                    current_user.set(user)
+                    playlist_update_event.set()
+                    break
+            if not found:
+                for user, playlist in shared_playlists.items():
+                    shared_playlists[user].extend(playlists_copy[user])
+                flash("You are trying to remove the last song in all playlists. Don't.")
+                return "FAILED"
+
+        os.remove(path)
+        playlist_update_event.set()
+        return "SUCCESS"
+
     @flask.route("/add_user", methods=["POST"])
     def add_user():
         username = request.form.get("username")
